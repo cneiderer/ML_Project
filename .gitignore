@@ -1,13 +1,19 @@
 # --- Data & Large Files ---
-# Ignore all raw data by default
-data/raw/**/*
+# Ignore all data content by default
+data/raw/**
+data/processed/**
 
-# Whitelist the metadata and event files (the "Exceptions")
+# Allow the directory structure (so the folders exist for the script)
+!data/raw/
+!data/processed/
+!data/raw/**/
+
+# Whitelist the specific metadata "Exceptions"
 !data/raw/**/feature_description.csv
 !data/raw/**/event_info.csv
 
-# Whitelist READMEs and folder structure
-!data/raw/.gitkeep
+# Keep the repository structure intact
+!**/.gitkeep
 !data/README.md
 
 # Global block for other data types (keep as is)
