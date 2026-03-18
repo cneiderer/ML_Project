@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 420">
+
+  <!-- Colors -->
+  <!-- Navy: #243B63 -->
+  <!-- Green: #4C8C2B -->
+  <!-- Orange: #F28C28 -->
+  <!-- Light Blue: #6FA7D6 -->
+
+  <!-- Turbine Tower -->
+  <polygon points="190,210 210,210 220,340 180,340" fill="#4C8C2B"></polygon>
+
+  <!-- Turbine Hub -->
+  <circle cx="200" cy="200" r="22" fill="#243B63"></circle>
+  <circle cx="200" cy="200" r="10" fill="white"></circle>
+
+  <!-- Turbine Blades -->
+  <polygon points="200,180 190,70 210,70" fill="#243B63"></polygon>
+
+  <polygon points="220,210 320,260 300,280" fill="#243B63"></polygon>
+
+  <polygon points="180,210 90,260 110,280" fill="#243B63"></polygon>
+
+  <!-- Data Waveform -->
+  <polyline points="60,200 80,200 95,180 110,220 125,190 140,200" fill="none" stroke="#4C8C2B" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"></polyline>
+
+  <!-- Signal Arcs -->
+  <path d="M230 170 A40 40 0 0 1 260 200" fill="none" stroke="#F28C28" stroke-width="6" stroke-linecap="round"></path>
+
+  <path d="M240 160 A60 60 0 0 1 280 200" fill="none" stroke="#F28C28" stroke-width="6" stroke-linecap="round"></path>
+
+  <!-- Base Waves -->
+  <path d="M120 360 C160 350 240 370 300 360" stroke="#243B63" stroke-width="8" fill="none"></path>
+
+  <path d="M140 375 C190 365 250 385 310 375" stroke="#6FA7D6" stroke-width="6" fill="none"></path>
+
+  <!-- Text -->
+  <text x="200" y="405" font-family="Arial, Helvetica, sans-serif" font-size="42" text-anchor="middle" fill="#243B63" font-weight="bold">
+    wtfd
+  </text>
+
+</svg>
