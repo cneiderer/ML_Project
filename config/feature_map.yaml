@@ -1,0 +1,87 @@
+farms:
+  A:
+    name: "Wind Farm A"
+    sensors:
+      amb_temp: "sensor_0_avg"
+      wind_speed: "wind_speed_3_avg"
+      pitch_angle: "sensor_5_avg"
+      active_power: ["sensor_44_avg", "sensor_45_avg", "sensor_46_avg"]
+      gen_speed: "sensor_18_avg"
+      gearbox_oil_temp: "sensor_12_avg"
+      transformer_temp: ["sensor_38_avg", "sensor_39_avg", "sensor_40_avg"]
+      nacelle_temp: "sensor_43_avg"
+      hub_temp: "sensor_6_avg"
+      yaw_error: "sensor_2_avg"
+      vibration_raw: "sensor_18_std"
+      hydraulic_temp: "sensor_41_avg"
+    units:
+      power: "Wh"
+      speed: "RPM"
+
+  B:
+    name: "Wind Farm B"
+    sensors:
+      amb_temp: "sensor_8_avg"
+      wind_speed: "wind_speed_61_avg"
+      pitch_angle: "sensor_10_avg"
+      active_power: "power_62_avg"
+      gen_speed: "sensor_19_avg"
+      gearbox_oil_temp: "sensor_39_avg"
+      transformer_temp: ["sensor_41_avg", "sensor_43_avg", "sensor_45_avg"]
+      nacelle_temp: "sensor_31_avg"
+      hub_temp: "sensor_22_avg"
+      yaw_error: ["sensor_4_avg", "sensor_21_avg"]
+      vibration_raw: ["sensor_54_avg", "sensor_55_avg", "sensor_56_avg"]
+      hydraulic_temp: null
+    units:
+      power: "kW"
+      speed: "RPM"
+
+  C:
+    name: "Wind Farm C"
+    sensors:
+      amb_temp: "sensor_7_avg"
+      wind_speed: "wind_speed_237_avg"
+      pitch_angle: "sensor_76_avg"
+      active_power: "power_6_avg"
+      gen_speed: "sensor_8_avg"
+      gearbox_oil_temp: ["sensor_186_avg", "sensor_187_avg"]
+      transformer_temp: ["sensor_191_avg", "sensor_192_avg"]
+      nacelle_temp: "sensor_41_avg"
+      hub_temp: "sensor_65_avg"
+      yaw_error: "sensor_124_avg"
+      vibration_raw: ["sensor_90_avg", "sensor_91_avg", "sensor_92_avg", "sensor_93_avg"]
+      hydraulic_temp: ["sensor_178_avg", "sensor_179_avg"]
+    units:
+      power: "kW"
+      speed: "rad/s"
+
+standard_features:
+  - amb_temp
+  - wind_speed
+  - pitch_angle
+  - active_power
+  - gen_speed
+  - gearbox_oil_temp
+  - transformer_temp
+  - nacelle_temp
+  - hub_temp
+  - yaw_error
+  - vibration_raw
+  - hydraulic_temp
+
+derived_features:
+  - name: "temp_delta_gearbox"
+    formula: "gearbox_oil_temp - amb_temp"
+  - name: "temp_trend_24h"
+    formula: "diff(gearbox_oil_temp, 144)" # 10min
+  - name: "rpm_volatility"
+    formula: "rolling_std(gen_speed, 36)" # 6h window (36 * 10min)
+  - name: "temp_divergence"
+    formula: "nacelle_temp - hub_temp"
+  - name: "power_efficiency"
+    formula: "active_power / (wind_speed ** 3)"
+  - name: "vibration_magnitude"
+    formula: "sqrt_sum_sq(vibration_raw)"
+  - name: "yaw_error_calculated"
+    formula: "if_list_then_diff(yaw_error)"
