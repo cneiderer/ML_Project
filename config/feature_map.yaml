@@ -5,7 +5,7 @@ farms:
       amb_temp: "sensor_0_avg"
       wind_speed: "wind_speed_3_avg"
       pitch_angle: "sensor_5_avg"
-      active_power: ["sensor_44_avg", "sensor_45_avg", "sensor_46_avg"]
+      active_power: ["sensor_44", "sensor_45", "sensor_46"]
       gen_speed: "sensor_18_avg"
       gearbox_oil_temp: "sensor_12_avg"
       transformer_temp: ["sensor_38_avg", "sensor_39_avg", "sensor_40_avg"]
