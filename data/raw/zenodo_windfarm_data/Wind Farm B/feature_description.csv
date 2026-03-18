@@ -1,0 +1,64 @@
+sensor_name;statistics_type;description;unit;is_angle;is_counter
+sensor_0;maximum,minimum,average,std_dev;Total negative reactive power;kvarh;False;True
+sensor_1;maximum,std_dev,average,minimum;Total negative active power;kWh;False;True
+sensor_2;average,minimum,maximum,std_dev;Total positive reactive power;kvarh;False;True
+sensor_3;maximum,std_dev,minimum,average;Total positive active power;kWh;False;True
+sensor_4;average,maximum,minimum,std_dev;Absolute wind direction;�;True;False
+sensor_5;average,maximum,std_dev,minimum;Torque delta calculated;kNm;False;False
+sensor_6;average,minimum,std_dev,maximum;Wind speed anemometer 2 calculated;m/s;False;False
+sensor_7;std_dev,maximum,minimum,average;Cable load;%;False;False
+sensor_8;maximum,average,minimum,std_dev;Outside temperature;�C;False;False
+sensor_9;average,minimum,maximum,std_dev;Estimated tower natural frequency;mHz;False;False
+sensor_10;maximum,std_dev,average,minimum;Pitch angle;�;True;False
+reactive_power_11;average,std_dev,maximum,minimum;Reactive power;kvar;False;False
+sensor_12;average,maximum,std_dev,minimum;Torque estimated;Nm;False;False
+sensor_13;std_dev,average,maximum,minimum;RMS voltage L1;V;False;False
+sensor_14;maximum,std_dev,average,minimum;RMS voltage L2;V;False;False
+sensor_15;average,std_dev,maximum,minimum;RMS voltage L3;V;False;False
+sensor_16;maximum,minimum,average,std_dev;RMS current L1;A;False;False
+sensor_17;average,maximum,minimum,std_dev;RMS current L2;A;False;False
+sensor_18;average,minimum,std_dev,maximum;RMS current L3;A;False;False
+sensor_19;maximum,minimum,average,std_dev;Generator converter rotational peed;rpm;False;False
+sensor_20;std_dev,maximum,minimum,average;Gearbox rotational speed;rpm;False;False
+sensor_21;minimum,maximum,std_dev,average;Nacelle direction;�;True;False
+sensor_22;std_dev,maximum,minimum,average;Hub temperature;�C;False;False
+sensor_23;minimum,average,maximum,std_dev;Grid frequency;Hz;False;False
+sensor_24;average,maximum,minimum,std_dev;Grid voltage;V;False;False
+sensor_25;average,maximum,minimum,std_dev;Rotor speed;rpm;False;False
+sensor_26;minimum,std_dev,average,maximum;Apparent power;kVA;False;False
+sensor_27;maximum,minimum,std_dev,average;Current;A;False;False
+sensor_28;std_dev,minimum,average,maximum;Motor current axis 1;A;False;False
+sensor_29;average,minimum,std_dev,maximum;Motor current axis 2;A;False;False
+sensor_30;maximum,std_dev,minimum,average;Motor current axis 3;A;False;False
+sensor_31;average,minimum,std_dev,maximum;Temperature internal consumption transformer;�C;False;False
+sensor_32;average,maximum,minimum,std_dev;Generator bearing temperature 1;�C;False;False
+sensor_33;average,maximum,minimum,std_dev;Generator bearing temperature 2;�C;False;False
+sensor_34;average,maximum,std_dev,minimum;Gearbox bearing temperature 1;�C;False;False
+sensor_35;minimum,std_dev,average,maximum;Gearbox bearing temperature 2;�C;False;False
+sensor_36;minimum,std_dev,maximum,average;Gearbox bearing temperature 3;�C;False;False
+sensor_37;minimum,maximum,std_dev,average;Gearbox bearing temperature 4;�C;False;False
+sensor_38;maximum,minimum,std_dev,average;Gearbox oil inlet temperature;�C;False;False
+sensor_39;average,maximum,minimum,std_dev;Gearbox oil tank temperature;�C;False;False
+sensor_40;minimum,std_dev,average,maximum;Transformator core temperature;�C;False;False
+sensor_41;average,std_dev,maximum,minimum;Transformer L1 (mid-voltage) temperature ;�C;False;False
+sensor_42;maximum,minimum,std_dev,average;Transformer L1 (undervoltage) temperature ;�C;False;False
+sensor_43;maximum,average,minimum,std_dev;Transformer L2 (mid-voltage) temperature ;�C;False;False
+sensor_44;maximum,average,minimum,std_dev;Transformer L2 (undervoltage) temperature ;�C;False;False
+sensor_45;average,maximum,minimum,std_dev;Transformer L3 (mid-voltage) temperature ;�C;False;False
+sensor_46;std_dev,average,maximum,minimum;Transformer L3 (undervoltage) temperature ;�C;False;False
+sensor_47;maximum,minimum,std_dev,average;Transformer cell temperature;�C;False;False
+sensor_48;maximum,std_dev,average,minimum;Motor temperature axis 1;�C;False;False
+sensor_49;average,minimum,maximum,std_dev;Motor temperature axis 2;�C;False;False
+sensor_50;std_dev,maximum,minimum,average;Motor temperature axis 3;�C;False;False
+sensor_51;average,std_dev,maximum,minimum;Rotor bearing temperature 1;�C;False;False
+sensor_52;maximum,minimum,std_dev,average;Rotor bearing temperature 2;�C;False;False
+sensor_53;maximum,minimum,average,std_dev;Slip ring temperature Generator;�C;False;False
+sensor_54;maximum,minimum,std_dev,average;Drive train vibration axis Z;mG;False;False
+sensor_55;average,maximum,minimum,std_dev;Tower vibration axis X;mG;False;False
+sensor_56;maximum,minimum,average,std_dev;Tower vibration axis Y;mG;False;False
+sensor_57;average,std_dev,maximum,minimum;Inverter torque;Nm;False;False
+power_58;maximum,minimum,average,std_dev;Available power;kW;False;False
+wind_speed_59;average,maximum,minimum,std_dev;Wind speed 1;m/s;False;False
+wind_speed_60;average,minimum,maximum,std_dev;Wind speed 2;m/s;False;False
+wind_speed_61;minimum,average,maximum,std_dev;Wind speed;m/s;False;False
+power_62;minimum,std_dev,maximum,average;Active power;kW;False;False

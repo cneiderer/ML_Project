@@ -1,0 +1,59 @@
+asset_id;event_id;event_label;event_start;event_start_id;event_end;event_end_id;event_description
+50;55;anomaly;2023-10-29 11:30:00;52848;2023-11-15 15:30:00;55320;Harting plug Nacelle/HUB damaged + NCR20_HUB: Wiring blade control system
+38;81;anomaly;2023-11-16 01:30:00;52704;2023-11-18 14:00:00;53067;Converter Failure from 17.11 12:30 - 18.11. 13:57, Fuse Filter Supply 
+21;47;anomaly;2023-12-22 15:00:00;52416;2023-12-27 13:40:00;53128;Failure due to Rotorbrake and Hydraulic problemes - Hydraulic pump A disabeld, 2h later turbine back in production - Analysis indicates a longer anomaly in temp_hydraulic_oil_tank_1_average until 15.01.2024 which is neither confirmed nor refuted.
+2;12;anomaly;2023-06-27 00:00:00;52560;2023-07-19 15:00:00;55818;10115 : Oil level error, two-pump mode + Oil Leakage Gear Oil Supply + 12019: Rotor brake B cannot be closed + P20_yaw carbon brush damaged
+34;4;anomaly;2023-07-31 10:00:00;52992;2023-08-19 10:00:00;55728;23020 : Axis 3 not ready-to-operate
+34;18;anomaly;2023-09-13 00:00:00;51408;2023-09-16 23:50:00;51983;We had some failures (störung 24VAC Versorgung Rotorbremse) on the 16th in the afternoon. From 17th onwards a longer standstill where we don't know the root cause to. 
+52;28;anomaly;2023-05-28 13:00:00;52704;2023-06-17 20:30:00;55629;P20_spinner_carbonbrush defekt + P20_Accumulators_hydraulic system
+52;39;anomaly;2023-10-19 13:00:00;52848;2023-10-24 15:20:00;53582;15004 : Safety chain relay open + 93005 : Gear oil cooler bypass valve
+12;66;anomaly;2023-01-17 00:00:00;51696;2023-01-23 13:00:00;52638;Pitchfailure - defect Beckhoffcard, Axis 2, rectified on 23/01 - Anomalie liegt aber länger an als der Fehler, Batterien waren ok
+12;15;anomaly;2023-02-06 00:00:00;51984;2023-02-23 00:00:00;54432;Randomn small failures regarding pitch resulting in a longer standstill due to a defect pitch encoder (26/02)
+15;78;anomaly;2023-07-30 13:00:00;52560;2023-08-01 14:30:00;52857;P20_Grounding role brake disc + P20_cover-lightning-main-cabinet-hub
+16;79;anomaly;2023-07-26 09:00:00;52704;2023-07-28 09:00:00;52992;Communication fault BK1120 in NC300
+16;30;anomaly;2023-12-15 00:00:00;52560;2024-01-06 15:40:00;55822;Pitch failure - defect fan on pitch motor
+43;33;anomaly;2023-08-26 13:00:00;52848;2023-09-15 13:00:00;55728;P20_Blade3_Grease Collector missing
+43;11;anomaly;2023-10-17 12:30:00;52416;2023-11-08 10:30:00;55572;P20_DGUV-v3 RCD 28F1 NC310 defective + 0 : P20_Blades_Cabinet Caps missing
+44;44;anomaly;2023-08-03 14:00:00;52704;2023-10-08 02:20:00;62138;Valve in water cooling system was left in wrong position after maintenance actions on 05-08-2020
+33;49;anomaly;2023-04-01 00:00:00;51840;2023-04-05 03:30:00;52437;Failure 2023-04-05 03:30 - defective coupling between gear oil pump and motor
+35;31;anomaly;2023-01-18 00:00:00;52848;2023-01-25 02:00:00;53868;Communication and Pitchfailure - slip ring and Beckhoff card
+35;67;anomaly;2023-02-02 00:00:00;52704;2023-04-01 00:00:00;61056;Turbine has some issues with overpressure on the main transformer
+55;9;anomaly;2023-08-05 07:30:00;52992;2023-08-26 09:30:00;56028;PENDING19_PREV_YAW_Grease pump defective
+42;91;anomaly;2023-10-12 09:30:00;52704;2023-11-01 12:00:00;55599;23020 : Axis 3 not ready-to-operate
+32;5;anomaly;2023-02-02 00:00:00;52272;2023-02-05 15:00:00;52794;WEC in failure - current measurement own consumption
+56;90;anomaly;2023-08-10 15:00:00;52848;2023-08-22 17:30:00;54591;COMMUNICATION FAULT BK1120 IN NC300 A2
+23;70;anomaly;2023-11-10 14:00:00;52560;2023-11-30 17:30:00;55461;21002 : Axis 1 DC-link voltage low, batt
+53;35;anomaly;2023-09-24 00:00:00;51696;2023-09-30 09:00:00;52614;"Turbine had several short standstills (max 8min) with failure ""Schwingungen Umrichter Drehmomenten Level 1"""
+53;16;anomaly;2023-12-23 00:00:00;51264;2024-01-06 23:50:00;53423;WEC in failure - hub battery charger defect
+53;76;anomaly;2023-01-08 00:00:00;51552;2023-01-09 16:50:00;51797;WEC in failure with pitch battery issues - rewiring
+50;8;normal;2023-08-23 17:00:00;52560;2023-09-06 06:30:00;54513;
+14;85;normal;2023-01-12 13:10:00;50832;2023-01-22 13:10:00;52272;
+38;6;normal;2023-12-01 22:50:00;52560;2023-12-15 22:50:00;54576;
+21;62;normal;2023-11-06 11:00:00;52416;2023-11-13 14:50:00;53447;
+2;36;normal;2023-08-16 19:50:00;52704;2023-08-29 21:00:00;54439;
+34;56;normal;2023-07-28 05:50:00;51120;2023-08-11 04:20:00;53127;
+34;94;normal;2023-06-12 10:40:00;52416;2023-06-22 10:40:00;53856;
+52;54;normal;2023-02-03 09:20:00;52992;2023-02-14 09:20:00;54576;
+52;43;normal;2023-08-17 03:10:00;52992;2023-08-30 03:10:00;54864;
+12;50;normal;2023-11-05 00:00:00;52128;2023-11-19 00:00:00;54144;
+15;64;normal;2023-09-23 00:30:00;52560;2023-10-03 00:30:00;54000;
+16;46;normal;2023-05-11 06:50:00;52560;2023-05-25 03:30:00;54556;
+16;65;normal;2023-11-05 04:20:00;52992;2023-11-19 11:50:00;55053;
+43;61;normal;2023-05-08 00:00:00;52992;2023-05-22 00:00:00;55008;
+43;93;normal;2023-08-02 15:50:00;52704;2023-08-24 15:50:00;55872;
+44;75;normal;2023-05-04 11:10:00;52992;2023-05-23 11:10:00;55728;
+33;41;normal;2023-01-16 05:00:00;51552;2023-02-12 18:30:00;55521;
+35;58;normal;2023-10-15 08:40:00;52992;2023-10-25 08:40:00;54432;
+35;48;normal;2023-04-25 12:00:00;52848;2023-05-08 12:00:00;54720;
+55;88;normal;2023-10-03 00:00:00;52704;2023-10-17 00:00:00;54720;
+55;57;normal;2023-04-29 05:40:00;52992;2023-05-11 05:40:00;54720;
+42;32;normal;2023-09-29 05:20:00;52560;2023-10-12 05:20:00;54432;
+5;89;normal;2023-03-06 01:10:00;51840;2023-03-19 01:10:00;53712;
+32;59;normal;2023-02-16 00:00:00;52128;2023-03-02 00:00:00;54144;
+56;63;normal;2023-07-06 23:10:00;52704;2023-07-16 23:10:00;54144;
+23;80;normal;2023-10-07 02:10:00;52560;2023-10-21 10:10:00;54624;
+23;37;normal;2023-02-28 18:00:00;51552;2023-03-12 18:00:00;53280;
+13;29;normal;2023-03-09 02:00:00;52704;2023-03-23 02:00:00;54720;
+53;1;normal;2023-10-02 00:00:00;51552;2023-10-13 00:00:00;53136;
+53;20;normal;2023-07-14 01:10:00;51696;2023-07-24 01:10:00;53136;
+53;60;normal;2023-02-17 05:30:00;52416;2023-02-28 05:30:00;54000;
