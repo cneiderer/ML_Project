@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wtfd"
+version = "0.1.0"
+description = "Wind Turbine Fault Detection using SCADA telemetry data"
+authors = [
+    { name = "Curtis Neiderer" }
+]
+readme = "README.md"
+requires-python = ">=3.9"
+
+# Core dependencies (required for the package to function)
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "pyyaml",
+    "pyarrow",
+]
+
+# Optional dependency groups
+[project.optional-dependencies]
+
+# For notebooks, EDA, and visualization
+notebooks = [
+    "jupyter",
+    "matplotlib",
+    "seaborn",
+]
+
+# For development tooling (optional but recommended)
+dev = [
+    "black",
+    "isort",
+    "flake8",
+    "ipykernel",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
