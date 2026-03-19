@@ -26,9 +26,6 @@ class WindFarmProcessor:
                 print(f"Directory not found: {csv_folder}")
                 continue
 
-            # print(f"Processing Farm {farm_id}...")
-            # for csv_file in csv_folder.glob("*.csv"):
-
             # Get list of files to set the total for tqdm
             csv_files = list(csv_folder.glob("*.csv"))
             print(f"\nProcessing Farm {farm_id}:")
@@ -113,24 +110,64 @@ class WindFarmProcessor:
         return df
 
     def _compute_derived_features(self, df, farm_id, raw_df):
-        """Calculates deltas, trends, and circular math."""
-        if farm_id == "B":
-            # Yaw Error: Absolute Wind - Nacelle Heading
-            sensor_ref = self.config['farms']['B']['sensors']['yaw_error']
-            if all(s in raw_df.columns for s in sensor_ref):
-                error = raw_df[sensor_ref[0]] - raw_df[sensor_ref[1]]
-                df['yaw_error'] = (error + 180) % 360 - 180
-
+        """Calculates deltas, trends, and complex engineering features."""
+        
+        # Standardize and Sort
         df = df.sort_values(['asset_id', 'time_stamp'])
         
-        # Physical deltas
+        # Physics-Based Deltas
         df['temp_delta_gearbox'] = df['gearbox_oil_temp'] - df['amb_temp']
-        df['temp_delta_hydraulic'] = df['hydraulic_temp'] - df['amb_temp']
         df['power_efficiency'] = df['active_power'] / (df['wind_speed']**3).replace(0, np.nan)
 
-        # Rolling Trends (Window is 10-min intervals)
+        # Vibration Magnitude (Euclidean Norm)
+        # Specifically for Farm C which has x, y, z components
+        vibe_cols = [c for c in raw_df.columns if 'vibration' in c.lower()]
+        if len(vibe_cols) >= 2:
+            df['vibration_magnitude'] = np.sqrt((raw_df[vibe_cols]**2).sum(axis=1))
+        else:
+            df['vibration_magnitude'] = np.nan
+
+        # Yaw Error Calculation (Farm B specific)
+        if farm_id == "B":
+            sensor_ref = self.config['farms']['B']['sensors']['yaw_error']
+            if isinstance(sensor_ref, list) and all(s in raw_df.columns for s in sensor_ref):
+                # result is wrapped to [-180, 180]
+                error = raw_df[sensor_ref[0]] - raw_df[sensor_ref[1]]
+                df['yaw_error'] = (error + 180) % 360 - 180
+        
+        # Instantaneous Stress Index
+        df['yaw_stress_index'] = df['yaw_error'].abs()
+
+        # Temperature Divergence (Fleet-wide deviation)
+        # How much hotter is this turbine than the average turbine at this timestamp?
+        fleet_avg_temp = df.groupby('time_stamp')['gearbox_oil_temp'].transform('mean')
+        df['temp_divergence'] = df['gearbox_oil_temp'] - fleet_avg_temp
+
+        # Time-Series Trends
+        # 24-hour delta (144 rows at 10-min intervals)
         df['temp_trend_24h'] = df.groupby('asset_id')['gearbox_oil_temp'].diff(144)
-        df['rpm_volatility'] = df.groupby('asset_id')['gen_speed'].transform(lambda x: x.rolling(36).std())
+
+        # 6-hour volatility (36 intervals) - Captures immediate mechanical jitter
+        df['rpm_volatility_6h'] = df.groupby('asset_id')['gen_speed'].transform(
+            lambda x: x.rolling(36).std()
+        )
+        # 24-hour volatility (144 intervals) - Captures long-term bearing degradation
+        df['rpm_volatility_24h'] = df.groupby('asset_id')['gen_speed'].transform(
+            lambda x: x.rolling(144).std()
+        )
+
+        # 6-hour persistent yaw stress (36 intervals) -
+        # Identifies if the turbine is stuck in a misaligned state
+        df['yaw_stress_persistent_6h'] = df.groupby('asset_id')['yaw_stress_index'].transform(
+            lambda x: x.rolling(36).mean()
+        )
+
+        # Drop initial NaN rows
+        # Since our largest window is 24h (144 intervals), the first 144 rows 
+        # of every turbine will have NaNs in the trend/volatility/persistence columns.
+        # We group by asset and skip the first 144 rows of each
+        # df = df.groupby('asset_id').apply(lambda x: x.iloc[144:], include_groups=False).reset_index()
+        df = df.groupby('asset_id').tail(-144).reset_index(drop=True)
         
         return df
 
