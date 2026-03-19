@@ -92,6 +92,7 @@ class WindFarmProcessor:
                 # Site B Yaw handled in derived; others averaged here
                 if feature == "yaw_error" and farm_id == "B":
                     mapped[feature] = np.nan 
+                    mapped["has_yaw_error"] = 0
                 else:
                     available_sensors = [s for s in sensor_ref if s in raw_df.columns]
                     mapped[feature] = raw_df[available_sensors].mean(axis=1) if available_sensors else np.nan
@@ -169,4 +170,43 @@ class WindFarmProcessor:
         for feature in self.standard_features:
             if full_df[feature].isnull().any():
                 full_df[feature] = full_df[feature].fillna(full_df[feature].mean())
+        return full_df
+
+    def load_processed_dataset(self, processed_dir):
+        """
+        Gathers all processed Parquet files from disk into a single 
+        harmonized DataFrame and prunes useless constant feature flags.
+        """
+        processed_path = Path(processed_dir)
+        parquet_files = list(processed_path.glob("*.parquet"))
+        
+        if not parquet_files:
+            raise FileNotFoundError(f"No parquet files found in {processed_dir}. "
+                                    "Did you run process_all_turbines() first?")
+
+        print(f"Combining {len(parquet_files)} turbines into master dataset...")
+        
+        # Load and concatenate
+        dfs = [pd.read_parquet(f) for f in parquet_files]
+        full_df = pd.concat(dfs, ignore_index=True)
+        
+        # Global Imputation
+        # Use data from other sensors to impute missing feature
+        full_df = self.impute_missing_sensors(full_df)
+        
+        # Prune constant 'has_' feature flags
+        # Columns that are 100% the same across the whole fleet provide no info
+        cols_to_drop = [
+            c for c in full_df.columns 
+            if c.startswith('has_') and full_df[c].nunique() <= 1
+        ]
+        
+        if cols_to_drop:
+            print(f"Dropping {len(cols_to_drop)} constant indicators: {cols_to_drop}")
+            full_df = full_df.drop(columns=cols_to_drop)
+        
+        # Final Sort
+        full_df = full_df.sort_values(['farm_id', 'asset_id', 'time_stamp']).reset_index(drop=True)
+        
+        print(f"Success. Final dataset shape: {full_df.shape}")
         return full_df
