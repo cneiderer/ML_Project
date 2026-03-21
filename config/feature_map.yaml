@@ -1,3 +1,25 @@
+# -----------------------------------------------------------------------------
+# feature_map.yaml
+#
+# Purpose:
+#   Defines the cross-farm feature harmonization schema for the WTDF project.
+#   Farm-specific sensor channels are mapped into a standardized feature space
+#   so that preprocessing, feature engineering, and modeling can operate on a
+#   consistent set of variables across Wind Farms A, B, and C.
+#
+# Design notes:
+#   - Each farm may use different raw sensor names for the same conceptual
+#     feature (for example, ambient temperature or generator temperature).
+#   - When a feature maps to multiple sensors, the preprocessing pipeline
+#     averages the available channels into a single standardized feature.
+#   - "standard_features" defines the expected mapped features produced during
+#     preprocessing.
+#   - "derived_features" documents additional engineered features expected to
+#     be created later in the preprocessing pipeline.
+#   - This file is declarative only: feature calculations are implemented in
+#     Python, not in YAML.
+# -----------------------------------------------------------------------------
+
 farms:
   A:
     name: "Wind Farm A"
@@ -5,7 +27,7 @@ farms:
       amb_temp: "sensor_0_avg"
       wind_speed: "wind_speed_3_avg"
       pitch_angle: "sensor_5_avg"
-      active_power: ["sensor_44", "sensor_45", "sensor_46"]
+      active_power: ["sensor_44", "sensor_45", "sensor_46"]   # averaged phase/power channels
       gen_speed: "sensor_18_avg"
       gearbox_oil_temp: "sensor_12_avg"
       transformer_temp: ["sensor_38_avg", "sensor_39_avg", "sensor_40_avg"]
@@ -14,6 +36,7 @@ farms:
       yaw_error: "sensor_2_avg"
       vibration_raw: "sensor_18_std"
       hydraulic_temp: "sensor_41_avg"
+      generator_temp: ["sensor_13_avg", "sensor_14_avg"]      # generator bearing temperatures
     units:
       power: "Wh"
       speed: "RPM"
@@ -30,9 +53,10 @@ farms:
       transformer_temp: ["sensor_41_avg", "sensor_43_avg", "sensor_45_avg"]
       nacelle_temp: "sensor_31_avg"
       hub_temp: "sensor_22_avg"
-      yaw_error: ["sensor_4_avg", "sensor_21_avg"]
+      yaw_error: ["sensor_4_avg", "sensor_21_avg"]            # averaged directional channels / yaw proxy
       vibration_raw: ["sensor_54_avg", "sensor_55_avg", "sensor_56_avg"]
-      hydraulic_temp: null
+      hydraulic_temp: null                                    # no suitable mapped hydraulic temperature channel
+      generator_temp: ["sensor_32_avg", "sensor_33_avg"]     # generator bearing temperatures
     units:
       power: "kW"
       speed: "RPM"
@@ -52,10 +76,12 @@ farms:
       yaw_error: "sensor_124_avg"
       vibration_raw: ["sensor_90_avg", "sensor_91_avg", "sensor_92_avg", "sensor_93_avg"]
       hydraulic_temp: ["sensor_178_avg", "sensor_179_avg"]
+      generator_temp: ["sensor_199_avg", "sensor_200_avg", "sensor_201_avg", "sensor_202_avg", "sensor_203_avg", "sensor_204_avg"]  # stator winding temperature proxy
     units:
       power: "kW"
       speed: "rad/s"
 
+# Standardized mapped features expected directly after sensor mapping.
 standard_features:
   - amb_temp
   - wind_speed
@@ -69,19 +95,13 @@ standard_features:
   - yaw_error
   - vibration_raw
   - hydraulic_temp
+  - generator_temp
 
+# Engineered features expected after derived-feature computation in preprocessing.
 derived_features:
-  - name: "temp_delta_gearbox"
-    formula: "gearbox_oil_temp - amb_temp"
-  - name: "temp_trend_24h"
-    formula: "diff(gearbox_oil_temp, 144)" # 10min
-  - name: "rpm_volatility"
-    formula: "rolling_std(gen_speed, 36)" # 6h window (36 * 10min)
-  - name: "temp_divergence"
-    formula: "nacelle_temp - hub_temp"
-  - name: "power_efficiency"
-    formula: "active_power / (wind_speed ** 3)"
-  - name: "vibration_magnitude"
-    formula: "sqrt_sum_sq(vibration_raw)"
-  - name: "yaw_error_calculated"
-    formula: "if_list_then_diff(yaw_error)"
+  - temp_delta_gearbox
+  - temp_trend_24h
+  - rpm_volatility
+  - temp_divergence
+  - power_efficiency
+  - vibration_magnitude
