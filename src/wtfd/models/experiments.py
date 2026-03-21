@@ -7,25 +7,27 @@ Define the canonical experiment configurations for the WTDF modeling workflow.
 
 This module is the single source of truth for *what experiments are run*.
 Each experiment represents a specific modeling problem definition, including:
+
 - which canonical state labels should be treated as positive
-- which models should be evaluated
+- which registered models should be evaluated
 - which metric should be optimized during threshold tuning
 - which data split strategy should be used
 
 Design Notes
 ------------
 - Keep experiment definitions explicit and easy to inspect.
-- Use descriptive names and comments so horizons are immediately understandable.
+- Use descriptive experiment names and comments so prediction horizons are
+  immediately understandable.
 - Return copies of configurations so callers cannot accidentally mutate the
   canonical experiment registry.
-- Keep logging lightweight and focused on retrieval / validation.
+- Keep logging lightweight and focused on retrieval and validation.
 
 Typical Usage
 -------------
 >>> from wtfd.models.experiments import get_experiment_config
 >>> exp = get_experiment_config("pre_24h")
 >>> exp["positive_states"]
-['pre_0_24h', 'event']
+['pre_0_24h', 'event_occurring']
 >>> exp["models"]
 ['logistic', 'rf', 'xgboost']
 """
@@ -50,22 +52,25 @@ logger = get_logger(__name__)
 #     "positive_states": [<canonical state labels treated as positive>],
 #     "models": [<registered model names>],
 #     "optimize_for": <threshold tuning metric>,
-#     "split_method": <supported split method name>,
+#     "split_method": <supported split strategy>,
 # }
 #
 # Notes:
-# - `positive_states` should match canonical state names produced by
-#   preprocessing / target-construction logic.
-# - `models` should reference names defined in model_registry.py.
-# - `optimize_for` should be supported by metrics.py / trainer.py.
-# - `split_method` should be supported by splitter.py.
+# - `positive_states` should match canonical state names produced by the
+#   preprocessing / target-construction pipeline.
+# - `models` should reference names defined in `model_registry.py`.
+# - `optimize_for` should be supported by `metrics.py` / `trainer.py`.
+# - `split_method` should be supported by `splitter.py`.
 EXPERIMENTS: dict[str, dict[str, Any]] = {
     # --------------------------------------------------
     # 24-hour prediction horizon
+    # Positive rows include:
+    # - pre_0_24h
+    # - event_occurring
     # --------------------------------------------------
     "pre_24h": {
         "description": "Predict faults within the next 24 hours.",
-        "positive_states": ["pre_0_24h", "event"],
+        "positive_states": ["pre_0_24h", "event_occurring"],
         "models": ["logistic", "rf", "xgboost"],
         "optimize_for": "f1",
         "split_method": "event_chronological",
@@ -73,10 +78,14 @@ EXPERIMENTS: dict[str, dict[str, Any]] = {
 
     # --------------------------------------------------
     # 48-hour prediction horizon
+    # Positive rows include:
+    # - pre_24_48h
+    # - pre_0_24h
+    # - event_occurring
     # --------------------------------------------------
     "pre_48h": {
         "description": "Predict faults within the next 48 hours.",
-        "positive_states": ["pre_24_48h", "pre_0_24h", "event"],
+        "positive_states": ["pre_24_48h", "pre_0_24h", "event_occurring"],
         "models": ["logistic", "rf", "xgboost"],
         "optimize_for": "f1",
         "split_method": "event_chronological",
@@ -84,6 +93,11 @@ EXPERIMENTS: dict[str, dict[str, Any]] = {
 
     # --------------------------------------------------
     # 72-hour prediction horizon
+    # Positive rows include:
+    # - pre_48_72h
+    # - pre_24_48h
+    # - pre_0_24h
+    # - event_occurring
     # --------------------------------------------------
     "pre_72h": {
         "description": "Predict faults within the next 72 hours.",
@@ -91,7 +105,7 @@ EXPERIMENTS: dict[str, dict[str, Any]] = {
             "pre_48_72h",
             "pre_24_48h",
             "pre_0_24h",
-            "event",
+            "event_occurring",
         ],
         "models": ["logistic", "rf", "xgboost"],
         "optimize_for": "f1",
@@ -118,6 +132,7 @@ def get_experiment_config(experiment_name: str) -> dict[str, Any]:
     dict[str, Any]
         Copy of the experiment configuration dictionary. The returned
         dictionary contains:
+
         - "description": human-readable experiment summary
         - "positive_states": list of canonical positive state labels
         - "models": list of registered model names to run
@@ -131,14 +146,14 @@ def get_experiment_config(experiment_name: str) -> dict[str, Any]:
 
     Notes
     -----
-    A copy is returned so that callers can modify experiment fields locally
-    without mutating the shared canonical registry.
+    A copy is returned so that callers can safely modify experiment fields
+    locally for a single run without mutating the shared canonical registry.
 
     Examples
     --------
     >>> exp = get_experiment_config("pre_48h")
     >>> exp["positive_states"]
-    ['pre_24_48h', 'pre_0_24h', 'event']
+    ['pre_24_48h', 'pre_0_24h', 'event_occurring']
     >>> exp["optimize_for"]
     'f1'
     """
@@ -154,8 +169,8 @@ def get_experiment_config(experiment_name: str) -> dict[str, Any]:
             f"Available experiments: {available}"
         )
 
-    # Return shallow copies of nested lists so callers can safely override
-    # local values for a single run without mutating the registry.
+    # Return shallow copies of nested lists so callers can override local
+    # values safely without mutating the shared registry.
     config = EXPERIMENTS[experiment_name].copy()
     config["positive_states"] = list(config.get("positive_states", []))
     config["models"] = list(config.get("models", []))
@@ -168,7 +183,7 @@ def get_experiment_config(experiment_name: str) -> dict[str, Any]:
         config.get("split_method"),
     )
     logger.debug(
-        "Experiment config details for '%s': positive_states=%s | description=%s",
+        "Experiment '%s' details | positive_states=%s | description=%s",
         experiment_name,
         config["positive_states"],
         config.get("description"),
@@ -189,8 +204,9 @@ def list_available_experiments() -> list[str]:
     Notes
     -----
     This helper is useful for:
+
     - CLI argument validation
-    - notebook display / inspection
+    - notebook inspection and display
     - experiment selection menus
     - validation of external configuration inputs
 

@@ -6,20 +6,28 @@ Purpose
 Preprocess raw SCADA event files from multiple wind farms into a unified,
 model-ready tabular dataset for wind turbine fault detection.
 
-This module:
-1. Reads farm-specific raw CSV files.
-2. Selects only required source columns using the YAML feature map.
-3. Maps farm-specific sensors into a standardized feature schema.
-4. Normalizes units across farms.
-5. Computes derived physics-based and temporal features.
-6. Applies event-based state labels and a convenience binary target.
-7. Validates expected features and label fields.
-8. Supports memory-aware master dataset creation via PyArrow.
+This module implements the end-to-end preprocessing workflow used to transform
+farm-specific raw event CSV files into a standardized dataset suitable for
+downstream exploratory analysis, feature selection, model training, and model
+evaluation.
 
-Labeling Design
----------------
-Canonical state labels preserve time-to-event structure:
+Core Responsibilities
+---------------------
+1. Read farm-specific raw CSV files.
+2. Select only required source columns using the YAML feature map.
+3. Map farm-specific sensors into a standardized feature schema.
+4. Normalize physical units across farms.
+5. Compute derived physics-based and temporal features.
+6. Apply canonical event-state labels and a convenience binary target.
+7. Validate expected features and label fields.
+8. Support memory-aware master dataset creation via PyArrow.
 
+Canonical Labeling Design
+-------------------------
+Canonical state labels preserve time-to-event structure and allow downstream
+experiments to redefine positive classes without rerunning preprocessing.
+
+Canonical state labels:
     0 = normal
     1 = pre_48_72h
     2 = pre_24_48h
@@ -36,6 +44,33 @@ This allows the processed dataset to remain flexible for:
 - binary classification
 - alternate horizon definitions
 - future sequence modeling
+
+Design Notes
+------------
+- Preserve a canonical processed dataset that supports multiple downstream
+  experiment definitions.
+- Keep farm-specific logic centralized in the YAML feature map and unit map.
+- Standardize schema early so later modeling modules can operate consistently.
+- Keep preprocessing responsible for feature creation, but not model-specific
+  feature selection or scaling.
+- Log major workflow steps for reproducibility and debugging.
+
+Typical Usage
+-------------
+>>> processor = WindFarmProcessor(
+...     config_path="feature_map.yaml",
+...     buffer_before_hours=0.0,
+...     buffer_after_hours=0.0,
+... )
+>>> df = processor.pipeline(
+...     farm_id="A",
+...     csv_path="raw/Wind Farm A/datasets/123.csv",
+...     event_path="raw/Wind Farm A/event_info.csv",
+... )
+>>> processor.process_all_turbines(
+...     raw_data_root="raw",
+...     output_dir="data/processed/events",
+... )
 """
 
 from __future__ import annotations
@@ -64,17 +99,44 @@ class WindFarmProcessor:
     """
     End-to-end preprocessing pipeline for harmonizing wind farm SCADA data.
 
+    This class converts farm-specific raw event CSV files into a standardized
+    processed dataset with:
+    - aligned feature names
+    - normalized physical units
+    - derived engineering features
+    - canonical event-state labels
+    - a convenience binary target
+
     Parameters
     ----------
-    config_path : str or Path, default="feature_map.yaml"
+    config_path : str or Path, default='feature_map.yaml'
         Path to the YAML configuration file defining per-farm sensor mappings,
-        units, and expected standardized feature names.
+        units, expected standardized feature names, and derived feature names.
     buffer_before_hours : float, default=0.0
         Optional exclusion buffer immediately before the earliest pre-event
-        window (i.e., before 72 hours to event start).
+        window (that is, before 72 hours to event start). Rows in this region
+        are labeled as `excluded_buffer` rather than normal.
     buffer_after_hours : float, default=0.0
-        Optional exclusion buffer after event_end to avoid recovery / edge
+        Optional exclusion buffer after `event_end` to avoid recovery / edge
         effects being treated as normal.
+
+    Attributes
+    ----------
+    config : dict
+        Parsed YAML configuration.
+    standard_features : list[str]
+        Standardized feature names expected after sensor mapping.
+    buffer_before_hours : float
+        Pre-event exclusion buffer duration in hours.
+    buffer_after_hours : float
+        Post-event exclusion buffer duration in hours.
+
+    Notes
+    -----
+    This class assumes:
+    - raw data files contain a `time_stamp` column
+    - event metadata files contain event_id / event_label / event_start / event_end
+    - farm-specific mappings are correctly defined in the YAML configuration
     """
 
     STATE_LABELS = {
@@ -94,6 +156,18 @@ class WindFarmProcessor:
         buffer_before_hours: float = 0.0,
         buffer_after_hours: float = 0.0,
     ) -> None:
+        """
+        Initialize the wind farm preprocessing pipeline.
+
+        Parameters
+        ----------
+        config_path : str or Path, default='feature_map.yaml'
+            Path to the YAML feature map configuration file.
+        buffer_before_hours : float, default=0.0
+            Exclusion buffer before the earliest pre-event window.
+        buffer_after_hours : float, default=0.0
+            Exclusion buffer after event end.
+        """
         with open(config_path, "r", encoding="utf-8") as f:
             self.config = yaml.safe_load(f)
 
@@ -108,26 +182,67 @@ class WindFarmProcessor:
             buffer_after_hours,
         )
 
+    # ------------------------------------------------------------------
+    # Derived feature engineering
+    # ------------------------------------------------------------------
     def _compute_derived_features(self, df: pd.DataFrame, farm_id: str) -> pd.DataFrame:
         """
-        Compute physics-based and temporal features.
+        Compute derived physics-based and temporal features.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Standardized per-file DataFrame after sensor mapping and unit
+            normalization.
+        farm_id : str
+            Wind farm identifier used for logging.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with derived features added.
+
+        Notes
+        -----
+        Current derived features include examples such as:
+        - yaw error
+        - gearbox temperature delta relative to ambient
+        - 24-hour temperature trend
+        - generator speed volatility
+        - temperature divergence
+        - power efficiency
+        - vibration magnitude
+        - selected lag deltas and rolling volatility features
+
+        Missing derived values are filled with 0 at the end of the method to
+        keep the output table modeling-friendly.
         """
         logger.debug("Computing derived features for farm_id=%s", farm_id)
 
+        # Ensure temporal ordering before rolling / differencing logic.
         df = df.sort_values("time_stamp").copy()
 
+        # Backfill yaw_error if it was not directly mapped but directional
+        # channels are available.
         if "yaw_error" not in df.columns or df["yaw_error"].isnull().all():
             if "wind_direction" in df.columns and "nacelle_direction" in df.columns:
                 error = np.abs(df["wind_direction"] - df["nacelle_direction"])
                 df["yaw_error"] = np.where(error > 180, 360 - error, error)
-                logger.debug("Backfilled yaw_error from directional channels for farm_id=%s", farm_id)
+                logger.debug(
+                    "Backfilled yaw_error from directional channels for farm_id=%s",
+                    farm_id,
+                )
 
         if "gearbox_oil_temp" in df.columns and "amb_temp" in df.columns:
-            df["temp_delta_gearbox"] = (df["gearbox_oil_temp"] - df["amb_temp"]).fillna(0)
+            df["temp_delta_gearbox"] = (
+                df["gearbox_oil_temp"] - df["amb_temp"]
+            ).fillna(0)
 
+        # 144 10-minute intervals ~= 24 hours if the raw cadence is 10 minutes.
         if "gearbox_oil_temp" in df.columns:
             df["temp_trend_24h"] = df["gearbox_oil_temp"].diff(144)
 
+        # 36 10-minute intervals ~= 6 hours.
         if "gen_speed" in df.columns:
             df["rpm_volatility"] = df["gen_speed"].rolling(window=36).std()
 
@@ -144,6 +259,8 @@ class WindFarmProcessor:
         lag_targets = ["gearbox_oil_temp", "generator_temp", "active_power", "yaw_error"]
         windows = [6, 24]
 
+        # Generate simple lag-delta and rolling-volatility features for a small
+        # set of operationally meaningful variables.
         for col in [c for c in lag_targets if c in df.columns]:
             for w in windows:
                 df[f"{col}_delta_{w}"] = df[col] - df[col].shift(w)
@@ -155,6 +272,22 @@ class WindFarmProcessor:
     def _validate_features(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Validate that expected mapped and derived features are present.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Processed DataFrame after feature engineering.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Unmodified input DataFrame.
+
+        Notes
+        -----
+        This method currently logs warnings for missing expected features rather
+        than raising an exception. That keeps preprocessing robust to partial
+        source availability while still surfacing schema issues.
         """
         expected = set(self.standard_features) | set(self.config.get("derived_features", []))
         missing = expected - set(df.columns)
@@ -168,7 +301,27 @@ class WindFarmProcessor:
 
     def _validate_labels(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Validate canonical state labels and convenience binary target.
+        Validate canonical state labels and convenience binary target columns.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Labeled processed DataFrame.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Unmodified input DataFrame.
+
+        Notes
+        -----
+        This method checks:
+        - required label-related columns exist
+        - state_label values fall within the canonical set
+        - non-buffer target values are binary
+
+        It logs warnings rather than raising by default so batch preprocessing
+        can continue while still surfacing data quality issues.
         """
         required_cols = {
             "event_id",
@@ -188,14 +341,23 @@ class WindFarmProcessor:
         valid_states = set(self.STATE_LABELS.values())
         observed_states = set(df["state_label"].dropna().unique())
         if not observed_states.issubset(valid_states):
-            logger.warning("Unexpected state_label values found: %s", sorted(observed_states - valid_states))
+            logger.warning(
+                "Unexpected state_label values found: %s",
+                sorted(observed_states - valid_states),
+            )
 
         non_buffer_target = df.loc[~df["is_excluded_buffer"], "target"].dropna().unique()
         if not set(non_buffer_target).issubset({0, 1}):
-            logger.warning("Unexpected target values found outside buffer rows: %s", sorted(set(non_buffer_target)))
+            logger.warning(
+                "Unexpected target values found outside buffer rows: %s",
+                sorted(set(non_buffer_target)),
+            )
 
         return df
 
+    # ------------------------------------------------------------------
+    # Per-file pipeline execution
+    # ------------------------------------------------------------------
     def pipeline(
         self,
         farm_id: str,
@@ -204,6 +366,31 @@ class WindFarmProcessor:
     ) -> pd.DataFrame:
         """
         Run the preprocessing pipeline for a single raw event CSV.
+
+        Parameters
+        ----------
+        farm_id : str
+            Wind farm identifier defined in the YAML configuration.
+        csv_path : str or Path
+            Path to the raw per-event SCADA CSV file.
+        event_path : str or Path or None, default=None
+            Optional path to the event metadata CSV for the farm.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Fully processed per-event DataFrame.
+
+        Pipeline Steps
+        --------------
+        1. Determine minimal required raw columns.
+        2. Read the raw CSV.
+        3. Map farm-specific sensors into standardized features.
+        4. Normalize physical units.
+        5. Compute derived features.
+        6. Validate feature presence.
+        7. Apply event labeling if metadata is available.
+        8. Validate label fields.
         """
         csv_path = Path(csv_path)
         event_path = Path(event_path) if event_path is not None else None
@@ -227,15 +414,42 @@ class WindFarmProcessor:
             df = self._label_by_event_id(df, event_path, csv_path.stem)
             df = self._validate_labels(df)
         else:
-            logger.info("No event metadata provided or found for %s; skipping labeling", csv_path.name)
+            logger.info(
+                "No event metadata provided or found for %s; skipping labeling",
+                csv_path.name,
+            )
 
-        logger.info("Completed pipeline for farm_id=%s, file=%s, output_shape=%s", farm_id, csv_path.name, df.shape)
+        logger.info(
+            "Completed pipeline for farm_id=%s, file=%s, output_shape=%s",
+            farm_id,
+            csv_path.name,
+            df.shape,
+        )
         return df
 
     def process_all_turbines(self, raw_data_root: PathLike, output_dir: PathLike) -> None:
         """
         Process all turbine event CSVs for all configured farms and save each
         processed file as Parquet.
+
+        Parameters
+        ----------
+        raw_data_root : str or Path
+            Root directory containing farm subdirectories and raw data.
+        output_dir : str or Path
+            Directory where processed per-event Parquet files will be written.
+
+        Notes
+        -----
+        The method expects each farm directory to follow the convention:
+
+            Wind Farm <farm_id>/
+                datasets/
+                    *.csv
+                event_info.csv
+
+        Each processed file is saved individually, which helps with memory
+        management and later streaming consolidation.
         """
         raw_root = Path(raw_data_root)
         out_root = Path(output_dir)
@@ -249,7 +463,11 @@ class WindFarmProcessor:
             event_path = farm_path / "event_info.csv"
 
             if not csv_folder.exists():
-                logger.warning("Skipping farm %s because dataset folder does not exist: %s", farm_id, csv_folder)
+                logger.warning(
+                    "Skipping farm %s because dataset folder does not exist: %s",
+                    farm_id,
+                    csv_folder,
+                )
                 continue
 
             csv_files = list(csv_folder.glob("*.csv"))
@@ -269,9 +487,30 @@ class WindFarmProcessor:
 
         logger.info("Completed batch preprocessing for all configured farms")
 
+    # ------------------------------------------------------------------
+    # Raw input schema handling
+    # ------------------------------------------------------------------
     def _get_required_columns(self, farm_id: str, csv_path: PathLike) -> list[str]:
         """
         Identify the minimal set of raw columns required for a given farm file.
+
+        Parameters
+        ----------
+        farm_id : str
+            Wind farm identifier defined in the YAML configuration.
+        csv_path : str or Path
+            Path to the raw CSV file.
+
+        Returns
+        -------
+        list[str]
+            Raw column names that should be read from the source CSV.
+
+        Notes
+        -----
+        This method inspects the source file header first and keeps only those
+        requested columns that actually exist in the file. This helps reduce
+        memory usage and avoids unnecessary read-time errors.
         """
         farm_cfg = self.config["farms"][farm_id]
         actual_cols = pd.read_csv(csv_path, sep=";", nrows=0).columns.tolist()
@@ -299,13 +538,39 @@ class WindFarmProcessor:
     def _map_sensors(self, raw_df: pd.DataFrame, farm_id: str) -> pd.DataFrame:
         """
         Map farm-specific raw sensor channels into a unified standardized schema.
+
+        Parameters
+        ----------
+        raw_df : pandas.DataFrame
+            Raw input DataFrame containing farm-specific sensor names.
+        farm_id : str
+            Wind farm identifier used to select the correct mapping rules.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Standardized DataFrame containing:
+            - time_stamp
+            - farm_id
+            - asset_id
+            - standardized feature columns
+
+        Notes
+        -----
+        If a standardized feature maps to multiple raw channels, the available
+        channels are averaged row-wise after numeric coercion.
+        Missing source channels are logged at debug level and filled with NaN.
         """
         farm_cfg = self.config["farms"][farm_id]
 
         mapped = pd.DataFrame(index=raw_df.index)
         mapped["time_stamp"] = raw_df["time_stamp"]
         mapped["farm_id"] = farm_id
-        mapped["asset_id"] = raw_df["asset_id"].astype(str) if "asset_id" in raw_df.columns else "Unknown"
+        mapped["asset_id"] = (
+            raw_df["asset_id"].astype(str)
+            if "asset_id" in raw_df.columns
+            else "Unknown"
+        )
 
         for feature in self.standard_features:
             sensor_ref = farm_cfg["sensors"].get(feature)
@@ -319,7 +584,11 @@ class WindFarmProcessor:
                         .mean(axis=1)
                     )
                 else:
-                    logger.debug("No available source columns found for feature '%s' in farm %s", feature, farm_id)
+                    logger.debug(
+                        "No available source columns found for feature '%s' in farm %s",
+                        feature,
+                        farm_id,
+                    )
                     mapped[feature] = np.nan
             else:
                 if sensor_ref in raw_df.columns:
@@ -338,6 +607,27 @@ class WindFarmProcessor:
     def _normalize_physics(self, df: pd.DataFrame, farm_id: str) -> pd.DataFrame:
         """
         Normalize cross-farm physical units into a common representation.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Standardized mapped DataFrame.
+        farm_id : str
+            Wind farm identifier used to select unit definitions.
+
+        Returns
+        -------
+        pandas.DataFrame
+            DataFrame with selected columns converted to shared units.
+
+        Notes
+        -----
+        Current examples include:
+        - active power conversion from Wh-based units
+        - generator speed conversion from rad/s to RPM
+
+        Additional conversions can be added here as more farms or sensors are
+        incorporated into the project.
         """
         units = self.config["farms"][farm_id]["units"]
 
@@ -351,11 +641,35 @@ class WindFarmProcessor:
 
         return df
 
-    def _label_by_event_id(self, df: pd.DataFrame, event_path: PathLike, filename_id: str) -> pd.DataFrame:
+    # ------------------------------------------------------------------
+    # Event labeling
+    # ------------------------------------------------------------------
+    def _label_by_event_id(
+        self,
+        df: pd.DataFrame,
+        event_path: PathLike,
+        filename_id: str,
+    ) -> pd.DataFrame:
         """
         Label rows using canonical event-state labels.
 
-        Canonical states
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Processed per-event DataFrame containing at least `time_stamp`.
+        event_path : str or Path
+            Path to the event metadata CSV.
+        filename_id : str
+            File stem or other identifier from which an integer event_id can
+            be extracted.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Labeled DataFrame with event metadata, canonical state labels,
+            state names, buffer flags, and the convenience binary target.
+
+        Canonical States
         ----------------
         0 = normal
         1 = pre_48_72h
@@ -364,16 +678,25 @@ class WindFarmProcessor:
         4 = event_occurring
         5 = excluded_buffer
 
-        The method also creates a convenience binary target:
+        Convenience Binary Target
+        -------------------------
         - target = 1 for states {1, 2, 3, 4}
         - target = 0 for state {0}
         - target = NaN for state {5}
+
+        Notes
+        -----
+        Label precedence is:
+        1. event_occurring
+        2. pre-event windows
+        3. excluded_buffer, but only if the row is otherwise still normal
+
+        This ensures that the buffer does not overwrite more informative
+        event-related states.
         """
         events = pd.read_csv(event_path, sep=";")
 
-        # ------------------------------------------------------------------
-        # Initialize canonical event/state fields
-        # ------------------------------------------------------------------
+        # Initialize canonical event/state fields with safe defaults.
         df["event_id"] = pd.Series([pd.NA] * len(df), dtype="Int64")
         df["event_label"] = pd.NA
         df["event_start"] = pd.NaT
@@ -389,7 +712,10 @@ class WindFarmProcessor:
         try:
             target_event_id = int("".join(filter(str.isdigit, filename_id)))
         except Exception:
-            logger.warning("Could not parse event_id from filename '%s'; keeping default normal labels", filename_id)
+            logger.warning(
+                "Could not parse event_id from filename '%s'; keeping default normal labels",
+                filename_id,
+            )
             return df
 
         df["event_id"] = target_event_id
@@ -409,14 +735,16 @@ class WindFarmProcessor:
         df["event_start"] = event_start
         df["event_end"] = event_end
 
-        # If not anomaly, keep default normal labels but preserve metadata.
+        # If the event is not labeled as an anomaly, preserve metadata but keep
+        # all rows in the default normal state.
         if event_label != "anomaly":
-            logger.debug("Event_id=%s is not labeled as anomaly; rows remain normal", target_event_id)
+            logger.debug(
+                "Event_id=%s is not labeled as anomaly; rows remain normal",
+                target_event_id,
+            )
             return df
 
-        # ------------------------------------------------------------------
-        # Define canonical temporal regions relative to event_start
-        # ------------------------------------------------------------------
+        # Define canonical temporal regions relative to event_start.
         pre_72h_start = event_start - pd.Timedelta(hours=72)
         pre_48h_start = event_start - pd.Timedelta(hours=48)
         pre_24h_start = event_start - pd.Timedelta(hours=24)
@@ -424,13 +752,13 @@ class WindFarmProcessor:
         buffer_before_start = pre_72h_start - pd.Timedelta(hours=self.buffer_before_hours)
         buffer_after_end = event_end + pd.Timedelta(hours=self.buffer_after_hours)
 
-        # Base masks
+        # Base masks.
         mask_event = (df["time_stamp"] >= event_start) & (df["time_stamp"] <= event_end)
         mask_pre_0_24 = (df["time_stamp"] >= pre_24h_start) & (df["time_stamp"] < event_start)
         mask_pre_24_48 = (df["time_stamp"] >= pre_48h_start) & (df["time_stamp"] < pre_24h_start)
         mask_pre_48_72 = (df["time_stamp"] >= pre_72h_start) & (df["time_stamp"] < pre_48h_start)
 
-        # Optional exclusion buffers
+        # Optional exclusion buffers.
         mask_buffer_before = pd.Series(False, index=df.index)
         if self.buffer_before_hours > 0:
             mask_buffer_before = (
@@ -447,25 +775,23 @@ class WindFarmProcessor:
 
         mask_buffer = mask_buffer_before | mask_buffer_after
 
-        # ------------------------------------------------------------------
-        # Apply state labels with clear precedence
-        # ------------------------------------------------------------------
+        # Apply canonical state labels with clear precedence.
         df.loc[mask_pre_48_72, "state_label"] = self.STATE_LABELS["pre_48_72h"]
         df.loc[mask_pre_24_48, "state_label"] = self.STATE_LABELS["pre_24_48h"]
         df.loc[mask_pre_0_24, "state_label"] = self.STATE_LABELS["pre_0_24h"]
         df.loc[mask_event, "state_label"] = self.STATE_LABELS["event_occurring"]
 
-        # Buffer should only override rows that are otherwise still normal.
-        df.loc[mask_buffer & (df["state_label"] == self.STATE_LABELS["normal"]), "state_label"] = (
-            self.STATE_LABELS["excluded_buffer"]
-        )
+        # Buffer overrides only rows that are otherwise still normal.
+        df.loc[
+            mask_buffer & (df["state_label"] == self.STATE_LABELS["normal"]),
+            "state_label",
+        ] = self.STATE_LABELS["excluded_buffer"]
 
         df["state_name"] = df["state_label"].map(self.STATE_NAMES)
-        df["is_excluded_buffer"] = df["state_label"] == self.STATE_LABELS["excluded_buffer"]
+        df["is_excluded_buffer"] = (
+            df["state_label"] == self.STATE_LABELS["excluded_buffer"]
+        )
 
-        # ------------------------------------------------------------------
-        # Convenience binary target
-        # ------------------------------------------------------------------
         positive_states = {
             self.STATE_LABELS["pre_48_72h"],
             self.STATE_LABELS["pre_24_48h"],
@@ -487,14 +813,34 @@ class WindFarmProcessor:
 
         return df
 
+    # ------------------------------------------------------------------
+    # Processed dataset loading / consolidation
+    # ------------------------------------------------------------------
     def load_processed_events(self, processed_dir: PathLike) -> pd.DataFrame:
         """
         Load and concatenate all processed event-level Parquet files from a directory.
 
+        Parameters
+        ----------
+        processed_dir : str or Path
+            Directory containing processed event-level Parquet files.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Concatenated event-level processed dataset.
+
+        Raises
+        ------
+        FileNotFoundError
+            If no event-level Parquet files are found.
+
         Warning
         -------
-        This method loads all event parquet files into memory and is intended
-        primarily for smaller debugging workflows.
+        This method loads all event Parquet files into memory and is intended
+        primarily for smaller debugging or exploratory workflows. For larger
+        datasets, prefer `create_master_dataset()` and load the consolidated
+        file directly.
         """
         processed_path = Path(processed_dir)
 
@@ -542,8 +888,34 @@ class WindFarmProcessor:
         batch_size: int = 65536,
     ) -> Path:
         """
-        Create and save a consolidated master dataset parquet file from all
-        processed event-level parquet files using a memory-aware PyArrow stream.
+        Create and save a consolidated master dataset Parquet file from all
+        processed event-level Parquet files using a memory-aware PyArrow stream.
+
+        Parameters
+        ----------
+        processed_dir : str or Path
+            Directory containing processed event-level Parquet files.
+        output_path : str or Path
+            Destination path for the master dataset Parquet file.
+        batch_size : int, default=65536
+            Batch size used by the PyArrow dataset scanner.
+
+        Returns
+        -------
+        pathlib.Path
+            Path to the created master dataset file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If no event-level Parquet files are found.
+        ValueError
+            If the dataset scan produces no record batches.
+
+        Notes
+        -----
+        This method is designed to be more memory-efficient than reading every
+        processed file into pandas and concatenating in memory.
         """
         processed_path = Path(processed_dir)
         output_path = Path(output_path)
@@ -609,8 +981,25 @@ class WindFarmProcessor:
 
     def get_parquet_row_count(self, parquet_path: PathLike) -> int:
         """
-        Return the total number of rows in a parquet file using PyArrow metadata.
+        Return the total number of rows in a Parquet file using PyArrow metadata.
+
+        Parameters
+        ----------
+        parquet_path : str or Path
+            Path to the Parquet file.
+
+        Returns
+        -------
+        int
+            Total row count stored in Parquet metadata.
+
+        Notes
+        -----
+        This is a lightweight way to inspect file size without loading the
+        dataset into memory.
         """
         parquet_path = Path(parquet_path)
         parquet_file = pq.ParquetFile(parquet_path)
-        return parquet_file.metadata.num_rows
+        row_count = parquet_file.metadata.num_rows
+        logger.debug("Parquet row count for %s: %d", parquet_path, row_count)
+        return row_count
