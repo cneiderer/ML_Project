@@ -18,14 +18,14 @@ data/processed/**
 
 # --- Artifacts & Outputs ---
 # Ignore all content by default
-wtfd/artifacts/**
-wtfd/outputs/**
-wtfd/models/**
+artifacts/**
+outputs/**
+models/**
 
 # Keep directory structure
-!wtfd/artifacts/.gitkeep
-!wtfd/outputs/.gitkeep
-!wtfd/models/.gitkeep
+!artifacts/.gitkeep
+!outputs/.gitkeep
+!models/.gitkeep
 
 # Global block for other data types (keep as is)
 *.parquet
