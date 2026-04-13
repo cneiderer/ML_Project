@@ -106,10 +106,6 @@ Artifacts:
 - `artifacts/modeling/`
 - `outputs/`
 
-Example (Threshold Curve – XGBoost 72h):
-
-![Threshold Curve](outputs/threshold_curve_xgboost_72h.png)
-
 ## Dataset
 
 Kasimov, A. (2024)
