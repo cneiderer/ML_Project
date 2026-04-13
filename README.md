@@ -93,7 +93,7 @@ Run modeling experiments
 python scripts/run_modeling.py
 ```
 
-Note: Running preprocessing and modeling will reproduce the full pipeline, including feature generation, model training, and artifact creation under `artifacts/` and `outputs/`.
+> Note: Running preprocessing and modeling will reproduce the full pipeline, including feature generation, model training, and artifact creation under `artifacts/` and `outputs/`.
 
 ## Example Outputs
 
@@ -105,6 +105,8 @@ Note: Running preprocessing and modeling will reproduce the full pipeline, inclu
 Artifacts:
 - `artifacts/modeling/`
 - `outputs/`
+
+> Note: All outputs are generated dynamically during pipeline execution and are not version-controlled.
 
 ## Dataset
 
@@ -133,7 +135,7 @@ See `data/README.md` for full dataset structure and preprocessing details.
 | 48h    | 0.127	 | 0.106	| 0.116 |
 | 72h    | 0.127	 | 0.135	| 0.131 |
 
-Note: Absolute performance metrics are modest due to severe class imbalance and the inherent difficulty of predicting rare failure events. Results should be interpreted in the context of early-warning signal detection rather than point prediction accuracy.
+> Note: Absolute performance metrics are modest due to severe class imbalance and the inherent difficulty of predicting rare failure events. Results should be interpreted in the context of early-warning signal detection rather than point prediction accuracy.
 
 ## Documentation
 
