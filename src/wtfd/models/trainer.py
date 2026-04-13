@@ -710,3 +710,140 @@ class WindFaultTrainer:
             X_train_val.shape[1],
         )
         self.fit(X_train_val, y_train_val)
+
+        def build_binary_target_from_states(
+        self,
+        state_names: pd.Series,
+        positive_states: list[str],
+        negative_states: list[str],
+        drop_states: Optional[list[str]] = None,
+    ) -> pd.Series:
+        """
+        Convert canonical state names into a binary modeling target.
+
+        Parameters
+        ----------
+        state_names : pandas.Series
+            Canonical state-name column, typically `state_name`.
+        positive_states : list[str]
+            State names that should map to positive class (1).
+        negative_states : list[str]
+            State names that should map to negative class (0).
+        drop_states : list[str] or None, default=None
+            State names that should be excluded from training/evaluation.
+
+        Returns
+        -------
+        pandas.Series
+            Binary target with values:
+            - 1 for positive states
+            - 0 for negative states
+            - NaN for dropped / unmapped states
+
+        Raises
+        ------
+        ValueError
+            If experiment state definitions overlap.
+        """
+        drop_states = drop_states or []
+
+        pos_set = set(positive_states)
+        neg_set = set(negative_states)
+        drop_set = set(drop_states)
+
+        overlap_pos_neg = pos_set & neg_set
+        overlap_pos_drop = pos_set & drop_set
+        overlap_neg_drop = neg_set & drop_set
+
+        if overlap_pos_neg or overlap_pos_drop or overlap_neg_drop:
+            raise ValueError(
+                "Experiment state definitions overlap. "
+                f"positive∩negative={sorted(overlap_pos_neg)}, "
+                f"positive∩drop={sorted(overlap_pos_drop)}, "
+                f"negative∩drop={sorted(overlap_neg_drop)}"
+            )
+
+        binary_target = pd.Series(np.nan, index=state_names.index, dtype="float64")
+        binary_target.loc[state_names.isin(negative_states)] = 0.0
+        binary_target.loc[state_names.isin(positive_states)] = 1.0
+
+        logger.info(
+            "Built binary target from canonical states | positives=%s | negatives=%s | dropped=%s",
+            positive_states,
+            negative_states,
+            drop_states,
+        )
+        return binary_target
+
+    def prepare_training_frame(
+        self,
+        df: pd.DataFrame,
+        positive_states: list[str],
+        negative_states: list[str],
+        drop_states: Optional[list[str]] = None,
+        state_col: str = "state_name",
+        target_col: str = "target",
+        preserve_original_target: bool = True,
+    ) -> pd.DataFrame:
+        """
+        Prepare an experiment-specific modeling DataFrame by converting
+        canonical state labels into a binary target and dropping excluded rows.
+
+        Parameters
+        ----------
+        df : pandas.DataFrame
+            Input processed dataset containing canonical state labels.
+        positive_states : list[str]
+            State names mapped to class 1.
+        negative_states : list[str]
+            State names mapped to class 0.
+        drop_states : list[str] or None, default=None
+            State names to exclude from the experiment.
+        state_col : str, default='state_name'
+            Column containing canonical state names.
+        target_col : str, default='target'
+            Output binary target column name.
+        preserve_original_target : bool, default=True
+            If True and `target_col` already exists, preserve it in a backup
+            column named `target_original` before overwriting.
+
+        Returns
+        -------
+        pandas.DataFrame
+            Filtered DataFrame with an experiment-specific binary target.
+
+        Raises
+        ------
+        KeyError
+            If `state_col` is missing.
+        """
+        if state_col not in df.columns:
+            logger.error("Missing state column '%s' in input DataFrame.", state_col)
+            raise KeyError(f"Missing required state column: {state_col}")
+
+        prepared = df.copy()
+
+        if preserve_original_target and target_col in prepared.columns:
+            backup_col = f"{target_col}_original"
+            if backup_col not in prepared.columns:
+                prepared[backup_col] = prepared[target_col]
+
+        prepared[target_col] = self.build_binary_target_from_states(
+            state_names=prepared[state_col],
+            positive_states=positive_states,
+            negative_states=negative_states,
+            drop_states=drop_states,
+        )
+
+        before_rows = len(prepared)
+        prepared = prepared.loc[prepared[target_col].notna()].copy()
+        prepared[target_col] = prepared[target_col].astype(int)
+
+        logger.info(
+            "Prepared training frame | rows_before=%d | rows_after=%d | dropped=%d",
+            before_rows,
+            len(prepared),
+            before_rows - len(prepared),
+        )
+
+        return prepared
