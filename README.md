@@ -1,6 +1,6 @@
 # Wind Turbine Fault Detection
 
-<p align="center"> <img src="assets/wtfd-banner.png" width="900" height="300"> </p> <p align="center"></p>
+<p align="center"> <img src="assets/wtfd-banner.png" width="900" height="500"> </p> <p align="center"></p>
 
 ## Project Overview
 
@@ -21,7 +21,7 @@ The primary objectives of this project are:
 
 ## Dataset
 
-<br>Kasimov, A. (2024).
+Kasimov, A. (2024).
 <br><i>Wind turbine SCADA data for early fault detection.</i>
 <br>Zenodo. https://zenodo.org/records/10958775
 
@@ -32,7 +32,7 @@ The dataset contains multivariate SCADA telemetry collected from wind turbines o
 ### Features include:
 
 * Environmental
-    *  Wind speed
+    * Wind speed
     * Ambient temperature
 * Mechanical
     * Rotor speed
