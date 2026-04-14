@@ -6,6 +6,8 @@ This project is structured as a modular, end-to-end machine learning pipeline fo
 
 Rather than embedding all logic within notebooks, core functionality is implemented in a reusable Python package (`wtfd`), with notebooks and scripts serving as orchestration layers.
 
+---
+
 ## Design Principles
 
 The architecture is guided by the following principles:
@@ -33,11 +35,13 @@ The architecture is guided by the following principles:
 * A unified pipeline ensures consistent preprocessing, feature engineering, and evaluation across experiments
 * Prevents data leakage and ensures fair model comparison
 
+---
+
 ## Repository Architecture
 
 The project is organized into the following high-level components:
 
-```bash
+```bash id="h1y0sk"
 ML_Project/
 ├── src/wtfd/          # Core package (data processing, modeling, utilities)
 ├── scripts/           # Pipeline entry points
@@ -45,9 +49,11 @@ ML_Project/
 ├── data/              # Raw and processed data (not version-controlled)
 ├── artifacts/         # Model outputs and experiment results
 ├── outputs/           # Generated visualizations
-├── documents/         # Project documentation
+├── docs/              # Project documentation and milestones
 ├── config/            # Configuration files
 ```
+
+---
 
 ## Core Package (`src/wtfd/`)
 
@@ -80,6 +86,8 @@ Handles:
 * shared helper functions
 
 > This structure enables separation of concerns within the modeling pipeline, improving maintainability and experiment flexibility.
+
+---
 
 ## Pipeline Architecture
 
@@ -118,16 +126,19 @@ The pipeline follows a structured, sequential flow:
 * Perform threshold optimization
 * Analyze temporal prediction behavior
 
+---
+
 ## Orchestration: Notebooks vs Scripts
 
 ### Notebooks
 
-* Used for:
+Used for:
 
-  * experimentation
-  * visualization
-  * exploratory analysis
-* Serve as a transparent interface for understanding pipeline behavior
+* experimentation
+* visualization
+* exploratory analysis
+
+They serve as an interactive interface for understanding pipeline behavior and validating results.
 
 ### Scripts
 
@@ -145,6 +156,8 @@ Used for:
 * Scripts provide **reproducibility and automation**
 
 > This combination balances development speed with reproducible, production-style workflow design.
+
+---
 
 ## Data and Artifact Management
 
@@ -167,6 +180,8 @@ Used for:
 
 * Visualizations are stored under `outputs/`
 * Generated dynamically during pipeline execution
+
+---
 
 ## Key Architectural Decisions
 
@@ -199,6 +214,8 @@ Parquet is used for processed data to:
 * All transformations respect temporal ordering
 * Train/test splits are chronological
 * Buffer zones prevent leakage near failure events
+
+---
 
 ## Summary
 

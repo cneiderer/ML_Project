@@ -4,8 +4,6 @@ End-to-end machine learning pipeline for predicting near-term wind turbine failu
 
 ![WTFD Banner](assets/wtfd-banner.png)
 
----
-
 ## Overview
 
 Wind turbines are critical infrastructure in modern renewable energy systems. Unexpected failures lead to costly downtime, expensive repairs, and lost energy production.
@@ -16,30 +14,25 @@ The problem is formulated as a **binary classification task**, where each timest
 
 This work demonstrates how machine learning can support condition-based maintenance and improve the reliability of renewable energy infrastructure.
 
----
-
 ## Objectives
 
-- Predict turbine failures within **24h, 48h, and 72h horizons**
-- Capture **temporal degradation patterns** using engineered features
-- Compare multiple machine learning models:
-  - Logistic Regression (baseline)
-  - Random Forest
-  - XGBoost
-- Evaluate performance under **severe class imbalance**
-- Align predictions with **real-world operational constraints**
+* Predict turbine failures within **24h, 48h, and 72h horizons**
+* Capture **temporal degradation patterns** using engineered features
+* Compare multiple machine learning models:
 
----
+  * Logistic Regression (baseline)
+  * Random Forest
+  * XGBoost
+* Evaluate performance under **severe class imbalance**
+* Align predictions with **real-world operational constraints**
 
 ## Key Insights
 
-- Failure is a **gradual degradation process**, not a sudden event  
-- Predictive signals are **distributed over time**, not localized  
-- **Temporal features (rolling, lag, volatility)** are critical  
-- Model performance is **consistent across prediction windows**  
-- **Threshold tuning** is essential due to probability miscalibration  
-
----
+* Failure is a **gradual degradation process**, not a sudden event
+* Predictive signals are **distributed over time**, not localized
+* **Temporal features (rolling, lag, volatility)** are critical
+* Model performance is **consistent across prediction windows**
+* **Threshold tuning** is essential due to probability miscalibration
 
 ## Project Structure
 
@@ -51,12 +44,12 @@ ML_Project/
 ├── data/                  # Raw and processed datasets
 ├── artifacts/             # Model outputs and experiment results
 ├── outputs/               # Generated figures and visualizations
-├── documents/             # Project documentation
+├── docs/                  # Project documentation and milestones
 ├── assets/                # Logos and visuals
 ├── config/                # Configuration files
 ```
 
-See `documents/repository_structure.md` for a detailed breakdown.
+See `docs/repository_structure.md` for a detailed breakdown.
 
 ## End-to-End Pipeline
 
@@ -64,31 +57,32 @@ See `documents/repository_structure.md` for a detailed breakdown.
 2. Preprocessing (cleaning, harmonization)
 3. Feature engineering (rolling, lag, rate-of-change)
 4. Labeling (24h / 48h / 72h windows + buffer zones)
-5. Modeling (LR, RF, XGBoost)
-6. Evaluation (PR metrics, threshold tuning, temporal analysis)
+5. Modeling (Logistic Regression, Random Forest, XGBoost)
+6. Evaluation (precision-recall metrics, threshold tuning, temporal analysis)
 
 ## Getting Started
 
-Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/cneiderer/ML_Project.git
 cd ML_Project
 ```
 
-Install
+### Install
 
 ```bash
 pip install -e .
 ```
 
-Run preprocessing
+### Run preprocessing
 
 ```bash
 python scripts/run_preprocessing.py
 ```
 
-Run modeling experiments
+### Run modeling experiments
+
 ```bash
 python scripts/run_modeling.py
 ```
@@ -97,14 +91,15 @@ python scripts/run_modeling.py
 
 ## Example Outputs
 
-- Feature importance
-- Threshold curves
-- Failure timelines
-- Model comparison summaries
+* Feature importance
+* Threshold curves
+* Failure timelines
+* Model comparison summaries
 
 Artifacts:
-- `artifacts/modeling/`
-- `outputs/`
+
+* `artifacts/modeling/`
+* `outputs/`
 
 > Note: All outputs are generated dynamically during pipeline execution and are not version-controlled.
 
@@ -113,40 +108,42 @@ Artifacts:
 Kasimov, A. (2024)
 https://zenodo.org/records/10958775
 
-Challenges:
-- Class imbalance
-- Missing data
-- Cross-farm inconsistencies
+**Challenges:**
+
+* Class imbalance
+* Missing data
+* Cross-farm inconsistencies
 
 See `data/README.md` for full dataset structure and preprocessing details.
 
 ## Technologies
-- Python (pandas, numpy, scikit-learn)
-- XGBoost
-- PyArrow
-- Jupyter
-- Custom package (wtfd)
+
+* Python (pandas, numpy, scikit-learn)
+* XGBoost
+* PyArrow
+* Jupyter
+* Custom package (`wtfd`)
 
 ## Current Results (XGBoost)
 
-| Window | Precision | Recall | F1  |
-| :----: | :-------: | :----: | :--: |
-| 24h    | 0.125	 | 0.132	| 0.128 |
-| 48h    | 0.127	 | 0.106	| 0.116 |
-| 72h    | 0.127	 | 0.135	| 0.131 |
+| Window | Precision | Recall |   F1  |
+| :----: | :-------: | :----: | :---: |
+|   24h  |   0.125   |  0.132 | 0.128 |
+|   48h  |   0.127   |  0.106 | 0.116 |
+|   72h  |   0.127   |  0.135 | 0.131 |
 
 > Note: Absolute performance metrics are modest due to severe class imbalance and the inherent difficulty of predicting rare failure events. Results should be interpreted in the context of early-warning signal detection rather than point prediction accuracy.
 
 ## Documentation
 
-- `documents/architecture.md`
-- `documents/experiments.md`
-- `documents/repository_structure.md`
+* `docs/architecture.md`
+* `docs/experiments.md`
+* `docs/repository_structure.md`
 
 ## AI Use Disclosure
 
 AI tools were used for documentation, structure, and code refinement.
-All modeling and analysis were independently performed.
+All modeling decisions, implementation, and analysis were performed independently.
 
 ## License
 

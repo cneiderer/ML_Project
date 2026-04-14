@@ -6,9 +6,11 @@ This repository is organized to support a modular, reproducible machine learning
 
 The structure separates core logic, data, experimentation, and outputs to improve clarity, maintainability, and usability.
 
+---
+
 ## Top-Level Structure
 
-```bash
+```bash id="eq9kcl"
 ML_Project/
 ├── src/                # Source code (Python package)
 ├── scripts/            # Pipeline entry points
@@ -16,16 +18,18 @@ ML_Project/
 ├── data/               # Raw and processed data (not version-controlled)
 ├── artifacts/          # Model outputs and experiment results
 ├── outputs/            # Generated visualizations
-├── documents/          # Project documentation
+├── docs/               # Project documentation and milestones
 ├── assets/             # Images and branding (e.g., README visuals)
 ├── config/             # Configuration files
 ```
+
+---
 
 ## Source Code (`src/wtfd/`)
 
 The core logic of the project is implemented as a Python package.
 
-```bash
+```bash id="yzzd17"
 src/wtfd/
 ├── data/               # Data loading, preprocessing, and transformation
 ├── models/             # Model training, evaluation, and experiment logic
@@ -38,6 +42,8 @@ This modular structure ensures that:
 * logic is not duplicated across experiments
 * the pipeline is maintainable and extensible
 
+---
+
 ## Scripts (`scripts/`)
 
 Scripts provide reproducible entry points for running the pipeline:
@@ -46,6 +52,8 @@ Scripts provide reproducible entry points for running the pipeline:
 * `run_modeling.py` → runs model training and evaluation experiments
 
 These scripts allow the full pipeline to be executed without manual interaction.
+
+---
 
 ## Notebooks (`notebooks/`)
 
@@ -57,9 +65,11 @@ Notebooks are used for:
 
 They serve as an interactive interface for understanding model behavior and validating pipeline outputs.
 
+---
+
 ## Data (`data/`)
 
-```bash
+```bash id="3zz0ch"
 data/
 ├── raw/                # Original SCADA data (external, not version-controlled)
 ├── processed/          # Generated datasets (not version-controlled)
@@ -71,6 +81,8 @@ data/
 
 See `data/README.md` for full details.
 
+---
+
 ## Artifacts (`artifacts/`)
 
 Stores structured outputs from modeling experiments:
@@ -80,6 +92,8 @@ Stores structured outputs from modeling experiments:
 * model performance summaries
 
 Artifacts are used for analysis and comparison across experiments.
+
+---
 
 ## Outputs (`outputs/`)
 
@@ -91,13 +105,22 @@ Stores generated visualizations, including:
 
 All outputs are generated dynamically and are not version-controlled.
 
-## Documents (`documents/`)
+---
 
-Contains project documentation:
+## Documentation (`docs/`)
+
+Contains project documentation and course deliverables:
 
 * `architecture.md` → system design and structure
 * `experiments.md` → modeling approach and evaluation
 * `repository_structure.md` → repository organization (this document)
+
+### Milestones (`docs/milestones/`)
+
+* Course project deliverables and milestone submissions
+* Included for reference and project context
+
+---
 
 ## Assets (`assets/`)
 
@@ -105,6 +128,8 @@ Stores static resources used in the repository:
 
 * README images
 * project visuals and branding
+
+---
 
 ## Configuration (`config/`)
 
@@ -116,9 +141,13 @@ Contains configuration files used throughout the project, such as:
 
 These files enable consistent and reproducible experimentation.
 
+---
+
 ## Notes on Testing
 
 Unit testing is not included in this project due to its exploratory and research-focused nature, but would be recommended for production systems.
+
+---
 
 ## Summary
 

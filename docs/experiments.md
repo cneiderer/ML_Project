@@ -10,6 +10,8 @@ Experiments are designed to:
 * evaluate model behavior under severe class imbalance
 * understand how early failure signals emerge over time
 
+---
+
 ## Problem Formulation
 
 The task is formulated as a **binary classification problem**:
@@ -18,6 +20,8 @@ The task is formulated as a **binary classification problem**:
 * **Negative class**: no failure event occurs within that window
 
 Each timestamp is treated as an observation with features derived from historical behavior, while labels are determined by future event occurrence.
+
+---
 
 ## Prediction Windows
 
@@ -31,6 +35,8 @@ These horizons reflect different operational objectives:
 
 * Short horizon → higher precision, immediate intervention
 * Long horizon → earlier warning, more planning flexibility
+
+---
 
 ## Labeling Strategy
 
@@ -49,6 +55,8 @@ To avoid ambiguity and data leakage, observations near failure events are exclud
 * Time periods immediately surrounding failure events are removed
 * Ensures that training data reflects true pre-failure conditions
 
+---
+
 ## Dataset Splitting
 
 Data is split using a **time-aware strategy**:
@@ -58,6 +66,8 @@ Data is split using a **time-aware strategy**:
 * Prevents leakage from future information
 
 This ensures that models are evaluated on their ability to generalize to future data.
+
+---
 
 ## Cross-Turbine Generalization Considerations
 
@@ -75,6 +85,8 @@ In practice, predictive maintenance systems are often developed at the turbine, 
 However, due to limited data availability per turbine and per wind farm, this project adopts a global modeling approach to ensure sufficient training data.
 
 This introduces an additional challenge, as the model must learn patterns that generalize across heterogeneous operating conditions.
+
+---
 
 ## Models Evaluated
 
@@ -96,6 +108,8 @@ The following models are compared:
 * Strong performance on structured/tabular data
 * Handles feature interactions and complex patterns effectively
 
+---
+
 ## Alternative Modeling Approaches
 
 This project frames the problem as a binary classification task using features derived from time-series data.
@@ -106,6 +120,8 @@ Given the project scope and data constraints, a feature-based classification app
 
 Exploring dedicated time-series models remains a potential area for future work.
 
+---
+
 ## Class Imbalance Handling
 
 Failure events are rare, resulting in severe class imbalance.
@@ -114,6 +130,8 @@ To address this:
 
 * Class weights are applied during model training
 * Evaluation focuses on precision-recall tradeoffs rather than accuracy
+
+---
 
 ## Evaluation Metrics
 
@@ -127,6 +145,8 @@ The following metrics are used:
 
 Accuracy is not used as a primary metric due to class imbalance.
 A model predicting only the majority class would achieve high accuracy but no practical value.
+
+---
 
 ## Threshold Optimization
 
@@ -150,6 +170,8 @@ However, threshold optimization does not change the underlying probability estim
 
 Formal calibration methods such as Platt scaling or isotonic regression were not applied in the current implementation, but remain a logical area for future work.
 
+---
+
 ## Experimental Workflow
 
 Each experiment follows a consistent pipeline:
@@ -162,6 +184,8 @@ Each experiment follows a consistent pipeline:
 
 This ensures consistent and fair comparison across models and prediction horizons.
 
+---
+
 ## Key Findings
 
 ### 1. Similar Performance Across Horizons
@@ -169,6 +193,8 @@ This ensures consistent and fair comparison across models and prediction horizon
 Model performance is broadly consistent across 24h, 48h, and 72h windows.
 
 This suggests that failure signals are distributed over time rather than concentrated near the event.
+
+---
 
 ### 2. Temporal Features Are Critical
 
@@ -180,11 +206,15 @@ Models rely heavily on:
 
 These features capture gradual system degradation.
 
+---
+
 ### 3. Threshold Selection Is Essential
 
 Default thresholds lead to poor precision-recall balance.
 
 Careful threshold tuning significantly improves usable model performance.
+
+---
 
 ### 4. Performance Reflects Problem Difficulty
 
@@ -196,6 +226,8 @@ Absolute metric values are modest due to:
 
 Results should be interpreted as early-warning signal detection rather than precise failure prediction.
 
+---
+
 ## Summary
 
 The experimental framework demonstrates that:
@@ -203,6 +235,6 @@ The experimental framework demonstrates that:
 * Predictive maintenance is feasible using SCADA data
 * Failure signals can be detected prior to events
 * Model performance depends heavily on feature engineering and threshold selection
-* Threshold tuning improved operational performance, but formal probability calibration remains future work.
+* Threshold tuning improved operational performance, but formal probability calibration remains future work
 
 The approach emphasizes **practical evaluation under real-world constraints** rather than idealized model performance.
