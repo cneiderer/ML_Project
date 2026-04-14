@@ -6,8 +6,6 @@ This project is structured as a modular, end-to-end machine learning pipeline fo
 
 Rather than embedding all logic within notebooks, core functionality is implemented in a reusable Python package (`wtfd`), with notebooks and scripts serving as orchestration layers.
 
----
-
 ## Design Principles
 
 The architecture is guided by the following principles:
