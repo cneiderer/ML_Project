@@ -6,8 +6,6 @@ This repository is organized to support a modular, reproducible machine learning
 
 The structure separates core logic, data, experimentation, and outputs to improve clarity, maintainability, and usability.
 
----
-
 ## Top-Level Structure
 
 ```bash id="eq9kcl"
@@ -22,8 +20,6 @@ ML_Project/
 ├── assets/             # Images and branding (e.g., README visuals)
 ├── config/             # Configuration files
 ```
-
----
 
 ## Source Code (`src/wtfd/`)
 
@@ -42,8 +38,6 @@ This modular structure ensures that:
 * logic is not duplicated across experiments
 * the pipeline is maintainable and extensible
 
----
-
 ## Scripts (`scripts/`)
 
 Scripts provide reproducible entry points for running the pipeline:
@@ -52,8 +46,6 @@ Scripts provide reproducible entry points for running the pipeline:
 * `run_modeling.py` → runs model training and evaluation experiments
 
 These scripts allow the full pipeline to be executed without manual interaction.
-
----
 
 ## Notebooks (`notebooks/`)
 
@@ -64,8 +56,6 @@ Notebooks are used for:
 * experiment analysis and visualization
 
 They serve as an interactive interface for understanding model behavior and validating pipeline outputs.
-
----
 
 ## Data (`data/`)
 
@@ -81,8 +71,6 @@ data/
 
 See `data/README.md` for full details.
 
----
-
 ## Artifacts (`artifacts/`)
 
 Stores structured outputs from modeling experiments:
@@ -93,8 +81,6 @@ Stores structured outputs from modeling experiments:
 
 Artifacts are used for analysis and comparison across experiments.
 
----
-
 ## Outputs (`outputs/`)
 
 Stores generated visualizations, including:
@@ -104,8 +90,6 @@ Stores generated visualizations, including:
 * other diagnostic figures
 
 All outputs are generated dynamically and are not version-controlled.
-
----
 
 ## Documentation (`docs/`)
 
@@ -120,16 +104,12 @@ Contains project documentation and course deliverables:
 * Course project deliverables and milestone submissions
 * Included for reference and project context
 
----
-
 ## Assets (`assets/`)
 
 Stores static resources used in the repository:
 
 * README images
 * project visuals and branding
-
----
 
 ## Configuration (`config/`)
 
@@ -141,13 +121,9 @@ Contains configuration files used throughout the project, such as:
 
 These files enable consistent and reproducible experimentation.
 
----
-
 ## Notes on Testing
 
 Unit testing is not included in this project due to its exploratory and research-focused nature, but would be recommended for production systems.
-
----
 
 ## Summary
 
