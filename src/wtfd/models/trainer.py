@@ -711,7 +711,7 @@ class WindFaultTrainer:
         )
         self.fit(X_train_val, y_train_val)
 
-        def build_binary_target_from_states(
+    def build_binary_target_from_states(
         self,
         state_names: pd.Series,
         positive_states: list[str],
